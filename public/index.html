@@ -14,14 +14,14 @@
     <button id="addText" title="Add Text Box">Add Text</button>
     <div id="text-tools">
       <span class="label">Format:</span>
-      <button id="boldBtn"  title="Bold"><b>B</b></button>
+      <button id="boldBtn"   title="Bold"><b>B</b></button>
       <button id="underlineBtn" title="Underline"><u>U</u></button>
       <button id="bulletBtn" title="• List">&bull; List</button>
       <button id="numberBtn" title="1. List">1. List</button>
     </div>
 
-    <button id="castTab"  title="Cast Your Tab">Cast Tab</button>
-    <button id="addCam"   title="Add Webcam PiP">Add Cam</button>
+    <button id="castTab"   title="Cast Your Tab">Cast Tab</button>
+    <button id="addCam"    title="Add Webcam PiP">Add Cam</button>
     <label class="label" for="imgUpload">Image:</label>
     <input type="file" id="imgUpload" accept="image/*" title="Upload Image" />
     <label class="label" for="vidUpload">Video:</label>
@@ -35,9 +35,9 @@
     <label class="label" for="mixVol">Mix Vol:</label>
     <input type="range" id="mixVol" min="0" max="2" step="0.01" value="1" />
 
-    <button id="start"   title="Start Streaming">Start</button>
-    <button id="stop"    title="Stop Streaming">Stop</button>
-    <button id="copyURL" title="Copy Viewer Link">Copy URL</button>
+    <button id="start"    title="Start Streaming">Start</button>
+    <button id="stop"     title="Stop Streaming">Stop</button>
+    <button id="copyURL"  title="Copy Viewer Link">Copy URL</button>
     <a id="viewLink" href="#" title="View Stream">View Stream</a>
 
     <button id="exportLayout" title="Export Layout">Export</button>
@@ -76,15 +76,15 @@
     const origin = location.origin;
 
     // Display room codes
-    document.getElementById('roomId').innerText = room;
+    document.getElementById('roomId').innerText     = room;
     document.getElementById('viewRoomId')?.innerText = room;
 
-    // Toolbar & canvas vs. viewer toggle
+    // Toggle Editor vs Viewer
     document.getElementById('toolbar').hidden = view;
     document.getElementById('canvas').hidden  = view;
     document.getElementById('viewer').hidden  = !view;
 
-    // Copy & View link setup
+    // Setup copy & view link
     document.getElementById('copyURL').onclick = () => {
       const url = `${origin}/?room=${room}&view=1`;
       navigator.clipboard.writeText(url);
@@ -92,7 +92,7 @@
     };
     document.getElementById('viewLink').href = `/?room=${room}&view=1`;
 
-    // If in Viewer mode, only play the stream
+    // Viewer mode: play incoming chunks
     if (view) {
       const socket = io({ query: { room } });
       const player = document.getElementById('player');
@@ -110,31 +110,29 @@
       return;
     }
 
-    // —— Editor Mode Setup ——
+    // —— Editor Mode ——  
     const socket = io({ query: { room } });
     const ctx    = new AudioContext();
     let micNode, tabNode;
 
-    // InteractJS utility
+    // InteractJS helper
     function enableInteract(el) {
       interact(el)
         .draggable({
-          onstart()  { el.classList.add('dragging'); },
-          onmove(e)  { dragMove(e); },
-          onend()    { el.classList.remove('dragging'); }
+          onstart() { el.classList.add('dragging'); },
+          onmove(e) { dragMove(e); },
+          onend()   { el.classList.remove('dragging'); }
         })
         .resizable({
           edges: { left:true, right:true, top:true, bottom:true },
           onmove(e) { resizeMove(e); }
         })
-        .gesturable({
-          onmove(e) { rotateMove(e); }
-        });
+        .gesturable({ onmove(e) { rotateMove(e); } });
     }
     function dragMove(e) {
       const t = e.target;
-      const x = (parseFloat(t.dataset.x) || 0) + e.dx;
-      const y = (parseFloat(t.dataset.y) || 0) + e.dy;
+      const x = (parseFloat(t.dataset.x)||0) + e.dx;
+      const y = (parseFloat(t.dataset.y)||0) + e.dy;
       t.style.transform = `translate(${x}px,${y}px) rotate(${t.dataset.rot||0}deg)`;
       t.dataset.x = x; t.dataset.y = y;
     }
@@ -146,7 +144,7 @@
     }
     function rotateMove(e) {
       const el  = e.target;
-      const rot = (parseFloat(el.dataset.rot) || 0) + e.da;
+      const rot = (parseFloat(el.dataset.rot)||0) + e.da;
       el.dataset.rot = rot;
       el.style.transform = `translate(${el.dataset.x||0}px,${el.dataset.y||0}px) rotate(${rot}deg)`;
     }
@@ -163,7 +161,7 @@
       active && e.target.focus();
     });
 
-    // Add a new text box
+    // Add new text box
     document.getElementById('addText').onclick = () => {
       const tb = document.createElement('div');
       tb.contentEditable = true;
@@ -179,9 +177,9 @@
 
     // Audio & media capture
     async function connectSource(stream, setter) {
-      const src  = ctx.createMediaStreamSource(stream);
-      const gain = ctx.createGain();
-      src.connect(gain).connect(ctx.destination);
+      const srcNode = ctx.createMediaStreamSource(stream);
+      const gain    = ctx.createGain();
+      srcNode.connect(gain).connect(ctx.destination);
       setter({ node: gain, stream });
     }
     document.getElementById('micToggle').onclick = async () => {
@@ -189,7 +187,7 @@
         const s = await navigator.mediaDevices.getUserMedia({ audio:true });
         connectSource(s, o=>micNode=o);
       } else {
-        micNode.stream.getTracks().forEach(t=>t.enabled = !t.enabled);
+        micNode.stream.getTracks().forEach(t=>t.enabled=!t.enabled);
       }
     };
     document.getElementById('micVol').oninput = e => micNode && (micNode.node.gain.value = e.target.value);
@@ -214,7 +212,7 @@
 
     // Upload image/video
     document.getElementById('imgUpload').onchange = e => {
-      const file = e.target.files[0], url = URL.createObjectURL(file);
+      const f = e.target.files[0], url = URL.createObjectURL(f);
       const img = document.createElement('img');
       img.src = url; img.className = 'draggable';
       img.style.cssText = 'width:150px;height:auto;';
@@ -222,7 +220,7 @@
       enableInteract(img);
     };
     document.getElementById('vidUpload').onchange = e => {
-      const file = e.target.files[0], url = URL.createObjectURL(file);
+      const f = e.target.files[0], url = URL.createObjectURL(f);
       const vid = document.createElement('video');
       vid.src = url; vid.controls = true; vid.autoplay = true;
       vid.className = 'draggable';
@@ -263,7 +261,6 @@
       a.click();
     };
     document.getElementById('importLayout').onchange = e => {
-      const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = () => {
         const layout = JSON.parse(reader.result);
@@ -279,7 +276,7 @@
           enableInteract(el);
         });
       };
-      reader.readAsText(file);
+      reader.readAsText(e.target.files[0]);
     };
   })();
   </script>

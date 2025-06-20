@@ -2,19 +2,24 @@ const express = require('express');
 const { v4: uuid } = require('uuid');
 const http = require('http');
 const socketIO = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-app.use(express.static('public'));
-
-app.get('/', (_, res) => {
-  // If no room param, generate one
-  const room = _.query.room || uuid();
-  res.redirect(`/?room=${room}`);
+// 1) Redirect “/” → “/?room=UUID” if no room supplied
+app.get('/', (req, res) => {
+  if (!req.query.room) {
+    return res.redirect(`/?room=${uuid()}`);
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// 2) Static assets (CSS, JS libs, client-side)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 3) Socket.io: relay chunks by room
 io.on('connection', (socket) => {
   const room = socket.handshake.query.room;
   socket.join(room);
