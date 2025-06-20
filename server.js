@@ -9,21 +9,21 @@ const io = socketIO(server);
 
 app.use(express.static('public'));
 
-// Redirect “/” to a new room ID
 app.get('/', (_, res) => {
-  res.redirect(`/?room=${uuid()}`);
+  // If no room param, generate one
+  const room = _.query.room || uuid();
+  res.redirect(`/?room=${room}`);
 });
 
-io.on('connection', sock => {
-  const room = sock.handshake.query.room;
-  sock.join(room);
-
-  // Relay media‐chunks to everyone else in the room
-  sock.on('stream-chunk', chunk => {
-    sock.to(room).emit('stream-chunk', chunk);
+io.on('connection', (socket) => {
+  const room = socket.handshake.query.room;
+  socket.join(room);
+  socket.on('stream-chunk', (chunk) => {
+    socket.to(room).emit('stream-chunk', chunk);
   });
 });
 
-server.listen(3000, () =>
-  console.log('🚀 Livestream server running at http://localhost:3000')
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () =>
+  console.log(`🚀 Livestream running on http://localhost:${PORT}`)
 );

@@ -2,279 +2,294 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Livestream Editor</title>
+  <title>Livestream</title>
   <link rel="stylesheet" href="layout.css" />
 </head>
 <body>
-  <div class="toolbar">
-    <!-- Logo in toolbar -->
+  <!-- Toolbar (Editor Mode) -->
+  <div id="toolbar" class="toolbar">
     <img
       class="company-logo"
-      src="https://avatars.githubusercontent.com/oa/3033067?s=240&amp;u=00ea87da3687ce9135fac4ae4cf569eb7179885d&amp;v=4"
-      alt="Company"
+      src="https://avatars.githubusercontent.com/oa/3033067?s=240&u=00ea87da3687ce9135fac4ae4cf569eb7179885d&v=4"
+      alt="Logo"
+      title="Livestream"
     />
 
-    <!-- Text tools -->
-    <button onclick="exec('bold')">B</button>
-    <button onclick="exec('underline')">U</button>
-    <button onclick="exec('insertUnorderedList')">• List</button>
-    <button onclick="exec('insertOrderedList')">1. List</button>
-    <select onchange="exec('fontSize', this.value)">
-      <option value="3">Normal</option>
-      <option value="5">Large</option>
-    </select>
-    <select onchange="exec('fontName', this.value)">
-      <option>Arial</option>
-      <option>Courier</option>
-      <option>Times</option>
-    </select>
+    <span class="label">Room:</span>
+    <span id="roomId" style="font-weight:bold;"></span>
 
-    <!-- Title input -->
-    <input id="title" placeholder="Screen Title" style="width:200px" />
-
-    <!-- Tab Capture -->
-    <button id="castTab">Cast Tab</button>
-
-    <!-- Camera PiP -->
-    <button id="addCam">Add My Cam</button>
-
-    <!-- Image / Video upload -->
-    <input type="file" id="imgUpload" accept="image/*" />
-    <input type="file" id="vidUpload" accept="video/*" />
-
-    <!-- Mic controls -->
-    <button id="micToggle">Mic On/Off</button>
-    <input type="range" id="micVol" min="0" max="2" step="0.01" value="1" />
-    <input type="range" id="tabVol" min="0" max="2" step="0.01" value="1" />
-    <input type="range" id="mixVol" min="0" max="2" step="0.01" value="1" />
-
-    <!-- Stream controls -->
-    <button id="start">Start Stream</button>
-    <button id="stop">Stop Stream</button>
-    <button id="copyURL">Copy URL</button>
-    <button id="exportLayout">Export Layout</button>
-    <input type="file" id="importLayout" />
-  </div>
-
-  <h1 style="padding:8px">Livestream Editor</h1>
-  <div id="canvas">
-    <!-- Editable text box -->
-    <div
-      id="textBox"
-      class="draggable"
-      contentEditable="true"
-      style="padding:8px; border:1px dashed #999; min-width:100px; min-height:50px;"
-    >
-      Edit me!
+    <button id="addText" title="Add Text Box">Add Text</button>
+    <div id="text-tools">
+      <span class="label">Text:</span>
+      <button id="boldBtn" title="Bold"><b>B</b></button>
+      <button id="underlineBtn" title="Underline"><u>U</u></button>
+      <button id="bulletBtn" title="• List">&bull; List</button>
+      <button id="numberBtn" title="1. List">1. List</button>
     </div>
 
-    <!-- Watermark logo -->
-    <img
-      class="company-logo"
-      src="https://avatars.githubusercontent.com/oa/3033067?s=240&amp;u=00ea87da3687ce9135fac4ae4cf569eb7179885d&amp;v=4"
-      alt=""
-    />
+    <button id="castTab" title="Cast Tab">Cast Tab</button>
+    <button id="addCam" title="Add Webcam">Add Cam</button>
+    <label class="label" for="imgUpload">Image:</label>
+    <input type="file" id="imgUpload" accept="image/*" title="Upload Image" />
+    <label class="label" for="vidUpload">Video:</label>
+    <input type="file" id="vidUpload" accept="video/*" title="Upload Video" />
+
+    <button id="micToggle" title="Toggle Mic">Mic On/Off</button>
+    <label class="label" for="micVol">Mic Vol:</label>
+    <input type="range" id="micVol" min="0" max="2" step="0.01" value="1" />
+    <label class="label" for="tabVol">Tab Vol:</label>
+    <input type="range" id="tabVol" min="0" max="2" step="0.01" value="1" />
+    <label class="label" for="mixVol">Mix Vol:</label>
+    <input type="range" id="mixVol" min="0" max="2" step="0.01" value="1" />
+
+    <button id="start" title="Start Streaming">Start</button>
+    <button id="stop" title="Stop Streaming">Stop</button>
+    <button id="copyURL" title="Copy Viewer Link">Copy Viewer URL</button>
+    <a id="viewLink" href="#" title="Go to Viewer">View Stream</a>
+
+    <button id="exportLayout" title="Export Layout">Export</button>
+    <input type="file" id="importLayout" title="Import Layout" />
   </div>
-<script src="https://livestream.onrender.com/socket.io/socket.io.js"></script>
+
+  <!-- Editor Canvas -->
+  <div id="canvas"></div>
+
+  <!-- Viewer Area -->
+  <div id="viewer" hidden>
+    <h2 style="color:#222; position:absolute; top:60px; left:50%; transform:translateX(-50%);">
+      👀 Viewer Mode
+    </h2>
+    <video id="player" controls autoplay></video>
+    <div class="orb" style="top:20%; left:15%; animation-delay:0s;"></div>
+    <div class="orb" style="top:60%; left:40%; animation-delay:1s;"></div>
+    <div class="orb" style="top:30%; left:70%; animation-delay:2.5s;"></div>
+  </div>
+
+  <!-- Libraries + Socket.io -->
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    (async () => {
-      // —— ROOM & SOCKET.IO SETUP ——
-      const params = new URLSearchParams(location.search);
-      const room = params.get("room");
-const socket = io("https://livestream.onrender.com", {
-  query: { room }
-});
+  ;(function() {
+    // URL params
+    const params = new URLSearchParams(location.search);
+    const room  = params.get('room');
+    const view  = params.get('view') === '1';
+    const origin = location.origin;
 
-      document.getElementById("copyURL").onclick = () =>
-        navigator.clipboard.writeText(location.href);
+    // Show room ID
+    document.getElementById('roomId').innerText = room;
 
-      // —— DRAG/RESIZE/ROTATE ——  
-      interact(".draggable")
-        .draggable({ onmove: dragMove })
-        .resizable({
-          edges: { left: true, right: true, top: true, bottom: true },
-          onmove: resizeMove,
+    // Toggle Editor vs Viewer
+    document.getElementById('toolbar').hidden = view;
+    document.getElementById('canvas').hidden  = view;
+    document.getElementById('viewer').hidden  = !view;
+
+    // Copy & View Link setup
+    document.getElementById('copyURL').onclick = () => {
+      const url = `${origin}/?room=${room}&view=1`;
+      navigator.clipboard.writeText(url);
+      alert('Viewer link copied:\n' + url);
+    };
+    document.getElementById('viewLink').href = `/?room=${room}&view=1`;
+
+    // If Viewer mode, just play the stream
+    if (view) {
+      const socket = io({ query: { room } });
+      const player = document.getElementById('player');
+      const ms = new MediaSource();
+      let sb;
+
+      player.src = URL.createObjectURL(ms);
+      ms.addEventListener('sourceopen', () => {
+        sb = ms.addSourceBuffer('video/webm; codecs="vp8, opus"');
+        socket.on('stream-chunk', chunk => {
+          const r = new FileReader();
+          r.onload = () => sb.appendBuffer(r.result);
+          r.readAsArrayBuffer(chunk);
+        });
+      });
+      return; // skip editor init
+    }
+
+    // —— EDITOR MODE ——  
+    const socket = io({ query: { room } });
+    const ctx = new AudioContext();
+    let micNode, tabNode;
+
+    // InteractJS helper
+    function enableInteract(el) {
+      interact(el)
+        .draggable({
+          onstart() { el.classList.add('dragging') },
+          onmove(e) { dragMove(e) },
+          onend() { el.classList.remove('dragging') }
         })
-        .gesturable({ onmove: rotateMove });
+        .resizable({
+          edges: { left:true, right:true, top:true, bottom:true },
+          onmove(e) { resizeMove(e) }
+        })
+        .gesturable({ onmove(e) { rotateMove(e) } });
+    }
+    function dragMove(e) {
+      const x = (parseFloat(e.target.dataset.x)||0) + e.dx;
+      const y = (parseFloat(e.target.dataset.y)||0) + e.dy;
+      e.target.style.transform =
+        `translate(${x}px,${y}px) rotate(${e.target.dataset.rot||0}deg)`;
+      e.target.dataset.x = x; e.target.dataset.y = y;
+    }
+    function resizeMove(e) {
+      const el = e.target;
+      el.style.width  = e.rect.width  + 'px';
+      el.style.height = e.rect.height + 'px';
+      dragMove(e);
+    }
+    function rotateMove(e) {
+      const el = e.target;
+      const rot = (parseFloat(el.dataset.rot)||0) + e.da;
+      el.dataset.rot = rot;
+      el.style.transform =
+        `translate(${el.dataset.x||0}px,${el.dataset.y||0}px) rotate(${rot}deg)`;
+    }
 
-      function dragMove(evt) {
-        let el = evt.target;
-        let x = (parseFloat(el.getAttribute("data-x")) || 0) + evt.dx;
-        let y = (parseFloat(el.getAttribute("data-y")) || 0) + evt.dy;
-        let rot = parseFloat(el.getAttribute("data-rot")) || 0;
-        el.style.transform = `translate(${x}px,${y}px) rotate(${rot}deg)`;
-        el.setAttribute("data-x", x);
-        el.setAttribute("data-y", y);
+    // Text formatting tools
+    const cmds = ['bold','underline','insertUnorderedList','insertOrderedList'];
+    const btns = ['boldBtn','underlineBtn','bulletBtn','numberBtn'];
+    btns.forEach((id,i) =>
+      document.getElementById(id).onclick = () =>
+        document.execCommand(cmds[i])
+    );
+    document.body.addEventListener('click', e => {
+      const show = e.target.classList.contains('text-box');
+      document.getElementById('text-tools').style.display = show ? 'flex' : 'none';
+      if (show) e.target.focus();
+    });
+
+    // Add text box
+    document.getElementById('addText').onclick = () => {
+      const tb = document.createElement('div');
+      tb.contentEditable = true;
+      tb.className = 'draggable text-box';
+      tb.innerText = 'Edit me…';
+      document.getElementById('canvas').append(tb);
+      enableInteract(tb);
+      setTimeout(() => {
+        tb.focus();
+        document.getElementById('text-tools').style.display = 'flex';
+      }, 0);
+    };
+
+    // Audio + media capture
+    async function connectSource(stream, setter) {
+      const srcNode = ctx.createMediaStreamSource(stream);
+      const gain   = ctx.createGain();
+      srcNode.connect(gain).connect(ctx.destination);
+      setter({ node: gain, stream });
+    }
+    document.getElementById('micToggle').onclick = async () => {
+      if (!micNode) {
+        const s = await navigator.mediaDevices.getUserMedia({ audio:true });
+        connectSource(s, o=>micNode=o);
+      } else {
+        micNode.stream.getTracks().forEach(t=>t.enabled=!t.enabled);
       }
-      function resizeMove(evt) {
-        let el = evt.target;
-        el.style.width = evt.rect.width + "px";
-        el.style.height = evt.rect.height + "px";
-        dragMove(evt);
-      }
-      function rotateMove(evt) {
-        let el = evt.target;
-        let rot = (parseFloat(el.getAttribute("data-rot")) || 0) + evt.da;
-        el.setAttribute("data-rot", rot);
-        el.style.transform = `translate(${el.getAttribute(
-          "data-x"
-        )}px,${el.getAttribute("data-y")}px) rotate(${rot}deg)`;
-      }
+    };
+    document.getElementById('micVol').oninput = e =>
+      micNode && (micNode.node.gain.value = e.target.value);
 
-      // —— TEXT TOOL HELPERS ——  
-      window.exec = (cmd, val = null) =>
-        document.execCommand(cmd, false, val);
+    document.getElementById('castTab').onclick = async () => {
+      const s = await navigator.mediaDevices.getDisplayMedia({ video:true,audio:true });
+      connectSource(s, o=>tabNode=o);
+      placeVideo(s);
+    };
+    document.getElementById('addCam').onclick = async () => {
+      const s = await navigator.mediaDevices.getUserMedia({ video:true });
+      placeVideo(s);
+    };
+    function placeVideo(stream) {
+      const v = document.createElement('video');
+      v.autoplay = true; v.muted = true; v.srcObject = stream;
+      v.className = 'draggable';
+      v.style.cssText = 'width:200px;height:150px;border:2px solid #0099ff;';
+      document.getElementById('canvas').append(v);
+      enableInteract(v);
+    }
 
-      // —— AUDIO MIXER SETUP ——  
-      const ctx = new AudioContext();
-      let micStream, tabStream, camStream;
-      let micNode, tabNode;
-      function connectSource(stream, setter) {
-        const src = ctx.createMediaStreamSource(stream);
-        const gain = ctx.createGain();
-        src.connect(gain).connect(ctx.destination);
-        setter({ node: gain, stream });
-      }
+    // Upload image/video
+    document.getElementById('imgUpload').onchange = e => {
+      const f = e.target.files[0];
+      const url = URL.createObjectURL(f);
+      const img = document.createElement('img');
+      img.src = url; img.className = 'draggable';
+      img.style.cssText = 'width:150px;height:auto;';
+      document.getElementById('canvas').append(img);
+      enableInteract(img);
+    };
+    document.getElementById('vidUpload').onchange = e => {
+      const f = e.target.files[0];
+      const url = URL.createObjectURL(f);
+      const vid = document.createElement('video');
+      vid.src = url; vid.controls = true; vid.autoplay = true;
+      vid.className = 'draggable';
+      vid.style.cssText = 'width:200px;height:150px;border:2px solid #0099ff;';
+      document.getElementById('canvas').append(vid);
+      enableInteract(vid);
+    };
 
-      // Mic on/off & vol
-      document.getElementById("micToggle").onclick = async () => {
-        if (!micStream) {
-          micStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          connectSource(micStream, (o) => (micNode = o));
-        } else {
-          micStream.getTracks().forEach((t) => (t.enabled = !t.enabled));
-        }
-      };
-      document.getElementById("micVol").oninput = (e) =>
-        micNode && (micNode.node.gain.value = e.target.value);
+    // Record & stream
+    let recorder;
+    document.getElementById('start').onclick = () => {
+      const dest = ctx.createMediaStreamDestination();
+      if (micNode) micNode.node.connect(dest);
+      if (tabNode) tabNode.node.connect(dest);
+      recorder = new MediaRecorder(dest.stream, {
+        mimeType: 'video/webm; codecs=vp8, opus'
+      });
+      recorder.ondataavailable = e =>
+        e.data.size && socket.emit('stream-chunk', e.data);
+      recorder.start(250);
+    };
+    document.getElementById('stop').onclick = () =>
+      recorder && recorder.stop();
 
-      // Tab casting
-      document.getElementById("castTab").onclick = async () => {
-        tabStream = await navigator.mediaDevices.getDisplayMedia({
-          audio: true,
-          video: true,
+    // Export / Import Layout
+    document.getElementById('exportLayout').onclick = () => {
+      const items = [...document.querySelectorAll('#canvas .draggable')];
+      const layout = items.map(el => ({
+        tag: el.tagName,
+        html: el.innerHTML,
+        styles: {
+          width: el.style.width,
+          height: el.style.height,
+          transform: el.style.transform
+        },
+        src: el.src || null
+      }));
+      const blob = new Blob([JSON.stringify(layout)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'layout.json';
+      a.click();
+    };
+    document.getElementById('importLayout').onchange = e => {
+      const f = e.target.files[0];
+      const r = new FileReader();
+      r.onload = () => {
+        const layout = JSON.parse(r.result);
+        const cvs = document.getElementById('canvas');
+        cvs.innerHTML = '';
+        layout.forEach(item => {
+          const el = document.createElement(item.tag);
+          if (item.src) el.src = item.src;
+          el.innerHTML = item.html;
+          Object.assign(el.style, item.styles);
+          el.className = 'draggable';
+          cvs.append(el);
+          enableInteract(el);
         });
-        connectSource(tabStream, (o) => (tabNode = o));
-        document.getElementById("tabVol").oninput = (e) =>
-          (tabNode.node.gain.value = e.target.value);
-        placeVideo(tabStream);
       };
-
-      // Camera PiP
-      document.getElementById("addCam").onclick = async () => {
-        camStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
-        placeVideo(camStream);
-      };
-
-      // Helper: place video onto canvas
-      function placeVideo(stream) {
-        const v = document.createElement("video");
-        v.className = "draggable";
-        v.srcObject = stream;
-        v.autoplay = true;
-        v.muted = true;
-        v.style.border = "2px solid #0099ff";
-        v.style.width = "200px";
-        v.style.height = "150px";
-        document.getElementById("canvas").appendChild(v);
-        interact(v).draggable(true).resizable(true).gesturable(true);
-      }
-
-      // Image / Video upload
-      document.getElementById("imgUpload").onchange = (e) => {
-        let file = e.target.files[0],
-          url = URL.createObjectURL(file),
-          img = document.createElement("img");
-        img.src = url;
-        img.className = "draggable";
-        img.style.width = "150px";
-        img.style.height = "auto";
-        document.getElementById("canvas").append(img);
-        interact(img).draggable(true).resizable(true).gesturable(true);
-      };
-      document.getElementById("vidUpload").onchange = (e) => {
-        let file = e.target.files[0],
-          url = URL.createObjectURL(file),
-          vid = document.createElement("video");
-        vid.src = url;
-        vid.controls = true;
-        vid.autoplay = true;
-        vid.className = "draggable";
-        vid.style.width = "200px";
-        vid.style.height = "150px";
-        document.getElementById("canvas").append(vid);
-        interact(vid).draggable(true).resizable(true).gesturable(true);
-      };
-
-      // —— STREAM CONTROLS ——  
-      let recorder;
-      document.getElementById("start").onclick = () => {
-        const mixedStream = ctx.createMediaStreamDestination();
-        if (micNode) micNode.node.connect(mixedStream);
-        if (tabNode) tabNode.node.connect(mixedStream);
-
-        recorder = new MediaRecorder(mixedStream.stream, {
-          mimeType: "video/webm; codecs=vp8,opus",
-        });
-        recorder.ondataavailable = (e) => {
-          if (e.data.size) socket.emit("stream-chunk", e.data);
-        };
-        recorder.start(250);
-      };
-      document.getElementById("stop").onclick = () => recorder && recorder.stop();
-
-      // —— LAYOUT EXPORT/IMPORT ——  
-      document.getElementById("exportLayout").onclick = () => {
-        const layout = [];
-        document
-          .querySelectorAll("#canvas .draggable")
-          .forEach((el) => {
-            layout.push({
-              tag: el.tagName,
-              html: el.innerHTML,
-              styles: {
-                width: el.style.width,
-                height: el.style.height,
-                transform: el.style.transform,
-              },
-              attrs: {
-                src: el.src || null,
-              },
-            });
-          });
-        const blob = new Blob([JSON.stringify(layout)], {
-          type: "application/json",
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "layout.json";
-        a.click();
-      };
-      document.getElementById("importLayout").onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = () => {
-          const data = JSON.parse(reader.result);
-          const canvas = document.getElementById("canvas");
-          canvas.innerHTML = ""; // clear
-          data.forEach((item) => {
-            const el = document.createElement(item.tag);
-            if (item.attrs.src) el.src = item.attrs.src;
-            el.innerHTML = item.html;
-            Object.assign(el.style, item.styles);
-            el.className = "draggable";
-            canvas.append(el);
-            interact(el).draggable(true).resizable(true).gesturable(true);
-          });
-        };
-        reader.readAsText(file);
-      };
-    })();
+      r.readAsText(f);
+    };
+  })();
   </script>
 </body>
 </html>
