@@ -1,0 +1,104 @@
+---
+permalink: /404.html
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>404 — Livestream</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #0099ff, #004466);
+      color: white;
+      text-align: center;
+      padding-top: 10%;
+      overflow: hidden;
+      height: 100vh;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 0.3em;
+      z-index: 1;
+      position: relative;
+    }
+
+    p {
+      font-size: 1.2em;
+      z-index: 1;
+      position: relative;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 20px;
+      z-index: 1;
+      position: relative;
+    }
+
+    a {
+      position: relative;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-block;
+      z-index: 1;
+    }
+
+    a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      width: 0%;
+      background: white;
+      transition: width 0.4s ease;
+    }
+
+    a:hover::after {
+      width: 100%;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, #66ccff, #0099ff);
+      width: 40px;
+      height: 40px;
+      opacity: 0.2;
+      pointer-events: none;
+      animation: floatAround 6s infinite ease-in-out alternate;
+    }
+
+    @keyframes floatAround {
+      0%   { transform: translate(0, 0) scale(1);   }
+      25%  { transform: translate(-120px, 100px) scale(1.4) rotate(30deg); }
+      50%  { transform: translate(100px, -80px) scale(0.8) rotate(60deg); }
+      75%  { transform: translate(-60px, -60px) scale(1.6) rotate(-45deg);}
+      100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Company Logo -->
+  <img class="logo" src="https://avatars.githubusercontent.com/oa/3033067?s=240&u=00ea87da3687ce9135fac4ae4cf569eb7179885d&v=4" alt="Company Logo" />
+  
+  <h1>404 — Oops! This page got lost in the livestream…</h1>
+  <p><a href="/">Return to the Livestream Home</a></p>
+
+  <!-- Glowing Orbs -->
+  <div class="orb" style="top:20%; left:15%; animation-delay: 0s;"></div>
+  <div class="orb" style="top:60%; left:40%; animation-delay: 0.8s;"></div>
+  <div class="orb" style="top:30%; left:70%; animation-delay: 1.4s;"></div>
+  <div class="orb" style="top:80%; left:10%; animation-delay: 2.1s;"></div>
+  <div class="orb" style="top:10%; left:85%; animation-delay: 2.9s;"></div>
+  <div class="orb" style="top:50%; left:50%; animation-delay: 3.3s;"></div>
+  <div class="orb" style="top:75%; left:75%; animation-delay: 3.9s;"></div>
+</body>
+</html>

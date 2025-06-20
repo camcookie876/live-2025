@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Livestream Viewer</title>
+  <link rel="stylesheet" href="layout.css" />
+</head>
+<body>
+  <h1>
+    👀 Livestream Viewer
+    <img
+      class="company-logo"
+      src="https://avatars.githubusercontent.com/oa/3033067?s=240&amp;u=00ea87da3687ce9135fac4ae4cf569eb7179885d&amp;v=4"
+      alt="Company"
+    />
+  </h1>
+  <video id="player" controls autoplay style="width:60%;"></video>
+
+  <!-- Watermark logo -->
+  <img
+    class="company-logo"
+    src="https://avatars.githubusercontent.com/oa/3033067?s=240&amp;u=00ea87da3687ce9135fac4ae4cf569eb7179885d&amp;v=4"
+    style="position:absolute;bottom:8px;right:8px;opacity:0.3;"
+    alt=""
+  />
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io({ query: new URLSearchParams(location.search).toString() });
+    const video = document.getElementById("player");
+    const mediaSource = new MediaSource();
+    let sourceBuffer;
+
+    video.src = URL.createObjectURL(mediaSource);
+    mediaSource.addEventListener("sourceopen", () => {
+      sourceBuffer = mediaSource.addSourceBuffer(
+        'video/webm; codecs="vp8, opus"'
+      );
+      socket.on("stream-chunk", (chunk) => {
+        const reader = new FileReader();
+        reader.onload = () => sourceBuffer.appendBuffer(reader.result);
+        reader.readAsArrayBuffer(chunk);
+      });
+    });
+  </script>
+</body>
+</html>

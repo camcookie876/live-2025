@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+
+# Mac system files
+.DS_Store
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Environment files (if you add them later)
+.env
+.env.local
