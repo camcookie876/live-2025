@@ -1,3 +1,4 @@
+/* public/layout.css */
 /* — Reset & Base — */
 *,
 *::before,
@@ -11,6 +12,7 @@ body {
   overflow: hidden;
   background: #f4f4f4;
   height: 100vh;
+  color: #222;
 }
 
 /* — Toolbar — */
@@ -33,6 +35,7 @@ body {
 .toolbar button,
 .toolbar input[type="file"],
 .toolbar input[type="range"],
+.toolbar input[type="text"],
 .toolbar a {
   background: #333;
   border: 1px solid #444;
@@ -45,19 +48,18 @@ body {
 .toolbar button:hover,
 .toolbar a:hover,
 .toolbar input[type="file"]:hover,
-.toolbar input[type="range"]:hover {
+.toolbar input[type="range"]:hover,
+.toolbar input[type="text"]:hover {
   background: #444;
 }
-.toolbar input[type="range"] {
-  width: 80px;
-}
-.company-logo {
-  margin-left: auto;
-  width: 32px; height: 32px;
-  border-radius: 50%;
+.toolbar input[type="range"] { width: 80px; }
+.toolbar input[type="text"] {
+  width: 200px;
+  color: #000;
+  text-overflow: ellipsis;
 }
 
-/* — Canvas & Viewer Containers — */
+/* — Canvas & Viewer — */
 #canvas,
 #viewer {
   position: absolute;
@@ -66,6 +68,16 @@ body {
   height: calc(100% - 48px);
   background: #ddd;
   overflow: hidden;
+}
+/* hint when canvas is empty */
+#canvas:empty::before {
+  content: "Arrange your objects here";
+  color: #888;
+  font-size: 1.2em;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 /* — Draggable Items — */
