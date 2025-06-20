@@ -2,7 +2,7 @@
 
 **Livestream** is a real-time broadcasting and creative layout editor built for sharing video, imagination, and cool ideas with the world.
 
-Created by a 10-year-old dev with a love for games, magical worlds, and storytelling magic.
+
 
 ## ✨ Features
 
