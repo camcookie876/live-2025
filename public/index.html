@@ -75,15 +75,16 @@
       alt=""
     />
   </div>
-
-  <script src="/socket.io/socket.io.js"></script>
+<script src="https://livestream.onrender.com/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <script>
     (async () => {
       // —— ROOM & SOCKET.IO SETUP ——
       const params = new URLSearchParams(location.search);
       const room = params.get("room");
-      const socket = io({ query: { room } });
+const socket = io("https://livestream.onrender.com", {
+  query: { room }
+});
 
       document.getElementById("copyURL").onclick = () =>
         navigator.clipboard.writeText(location.href);
